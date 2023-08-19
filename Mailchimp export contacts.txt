@@ -1,6 +1,6 @@
 function importMailchimpContacts() {
   // Replace with your Mailchimp API key and audience ID
-  var apiKey = '4e25b66812616c5dbe722fb6950856d8-us21';
+  var apiKey = '4e25b66812616c5dbe722fb6950856d8-us21'; // Replace with your Mailchimp API Key
   var audienceId = 'f69fa795b0';
   
   var sheetId = '1yrbAbAEokEOedHdoPOz7tP1xsFhkEOAv7U8_tHFn4Rs';
