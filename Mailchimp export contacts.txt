@@ -1,0 +1,49 @@
+function importMailchimpContacts() {
+  // Replace with your Mailchimp API key and audience ID
+  var apiKey = '4e25b66812616c5dbe722fb6950856d8-us21';
+  var audienceId = 'f69fa795b0';
+  
+  var sheetId = '1yrbAbAEokEOedHdoPOz7tP1xsFhkEOAv7U8_tHFn4Rs';
+  var sheet = SpreadsheetApp.openById(sheetId).getActiveSheet();
+  
+  var baseUrl = 'https://us21.api.mailchimp.com/3.0/lists/' + audienceId + '/members';
+  var pageSize = 100; // Number of contacts to retrieve per page
+  
+  var headers = {
+    "Authorization": "Basic " + Utilities.base64Encode("anystring:" + apiKey)
+  };
+
+  var allContacts = [];
+
+  var offset = 0;
+  while (true) {
+    var url = baseUrl + '?offset=' + offset + '&count=' + pageSize;
+
+    var options = {
+      "method": "get",
+      "headers": headers
+    };
+
+    var response = UrlFetchApp.fetch(url, options);
+    var data = JSON.parse(response.getContentText());
+
+    var contacts = data.members;
+
+    if (contacts.length === 0) {
+      break;
+    }
+
+    allContacts = allContacts.concat(contacts);
+    offset += pageSize;
+  }
+
+  var rows = [];
+  rows.push(['Email', 'First Name', 'Last Name']);
+
+  for (var i = 0; i < allContacts.length; i++) {
+    var contact = allContacts[i];
+    rows.push([contact.email_address, contact.merge_fields.FNAME, contact.merge_fields.LNAME]);
+  }
+
+  sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+}

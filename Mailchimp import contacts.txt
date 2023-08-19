@@ -1,0 +1,63 @@
+function importToMailchimp() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet(); // Keep the spreadsheet with contact data open  
+  var sheet = ss.getSheetByName('Sheet1'); // Replace 'Sheet1' with your sheet's name
+  var data = sheet.getDataRange().getValues();
+
+  var apiKey = '4e25b66812616c5dbe722fb6950856d8-us21'; // API key of Mailchimp account
+  var audienceId = 'f69fa795b0'; // Key for Audience List
+
+  for (var i = 1; i < data.length; i++) {
+    var email = data[i][3]; // If email-ids are in the fourth column
+    var firstName = data[i][0]; // If email-ids are in the first column
+    var lastName = data[i][1]; // If email-ids are in the second column
+
+    var existingContactUrl = 'https://us21.api.mailchimp.com/3.0/lists/' + audienceId + '/members/' + encodeURIComponent(email); // us21 should be replaced by the database center of your API key (last four characters)
+    Logger.log('Existing Contact URL: ' + existingContactUrl); // Log the URL for debugging
+    var existingContactOptions = {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey
+      }
+    };
+
+    var existingContactResponse = UrlFetchApp.fetch(existingContactUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey
+      },
+      muteHttpExceptions: true // To obtain more log reports
+    });
+    
+    var existingContactData = JSON.parse(existingContactResponse.getContentText());
+
+
+    if (existingContactData.status === 404) {
+      // Contact doesn't exist, add it
+      var addContactUrl = 'https://us21.api.mailchimp.com/3.0/lists/' + audienceId + '/members';
+      var payload = {
+        email_address: email,
+        status: 'subscribed',
+        merge_fields: {
+          FNAME: firstName,
+          LNAME: lastName
+        }
+      };
+
+      var addContactOptions = {
+        method: 'POST',
+        contentType: 'application/json',
+        headers: {
+          'Authorization': 'Bearer ' + apiKey
+        },
+        payload: JSON.stringify(payload)
+      };
+
+      var addContactResponse = UrlFetchApp.fetch(addContactUrl, addContactOptions);
+      Logger.log(addContactResponse.getContentText());
+    } else {
+      // Contact already exists, consider updating information
+      // You can use the PUT method here to update the contact's info
+      Logger.log('Contact already exists: ' + email);
+    }
+  }
+}
